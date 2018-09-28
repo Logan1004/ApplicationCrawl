@@ -56,12 +56,12 @@ def open(url, keyword):
                 test = driver.find_element_by_xpath('//*[@id="idItem49"]/div/div[1]/h3/p[1]/span[1]')
             print('page-%d'%i)
             item = driver.find_element_by_id('resultContainer_ab')
-            get_info(item.find_elements_by_class_name('item'))
+            get_info(item.find_elements_by_class_name('item'),keyword)
             driver.find_element_by_id('idPageNext').click()
         i = i + 1
     driver.close()
 
-def get_info(item_list):
+def get_info(item_list,keyword):
     for item in item_list:
         # if item.get_attribute('id') == '':
         #     continue
@@ -79,15 +79,15 @@ def get_info(item_list):
         # print(item.text)
         info['owner'] = spans[0].text
         # print(spans[0].text)                     #owner
-        get_detail(info)
+        get_detail(info,keyword)
 
 
 
 
-def get_detail(info):
+def get_detail(info,keyword):
     #在这里写数据库
     #info是一个字典，里面有如下字段'title': 专利的标题 'apply_time': 专利申请时间 'announce_time': 公示时间 'owner': 专利申请人
-    sql = "INSERT INTO Application(Title,ApplyTime,AnnounceTime,Owner) VALUES ('%s','%s','%s','%s')" % (info["title"],info['apply_time'],info['announce_time'],info['owner'])
+    sql = "INSERT INTO Application(Title,ApplyTime,AnnounceTime,Owner,Category) VALUES ('%s','%s','%s','%s','%s')" % (info["title"],info['apply_time'],info['announce_time'],info['owner'],keyword[0])
     try:
         # 执行sql语句
         cursor.execute(sql)
@@ -97,9 +97,9 @@ def get_detail(info):
         # 发生错误时回滚
         db.rollback()
         message = "专利信息插入数据库异常！出错位置：#3 出错文件：fetch.py"
-        mailbot.send_mail('1585084146@qq.com', message)
-        mailbot.send_mail('1264160868@qq.com', message)
-        mailbot.send_mail('1228974364@qq.com', message)
+        #mailbot.send_mail('1585084146@qq.com', message)
+        #mailbot.send_mail('1264160868@qq.com', message)
+        #mailbot.send_mail('1228974364@qq.com', message)
         print("234567876543212345678765432")
     print("%s  %s"%(info['title'], info['apply_time']))
 
