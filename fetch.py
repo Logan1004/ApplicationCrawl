@@ -8,10 +8,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import WebDriverException
 import mailbot
 import pymysql
+import xlwt
 
 db = pymysql.connect("localhost", "root", "1234", "CrawlProject")
 cursor = db.cursor()
-
+lin_num = 0
 
 def open(url, keyword):
     driver = webdriver.Chrome()
@@ -62,6 +63,7 @@ def open(url, keyword):
     driver.close()
 
 def get_info(item_list,keyword):
+
     for item in item_list:
         # if item.get_attribute('id') == '':
         #     continue
@@ -79,6 +81,8 @@ def get_info(item_list,keyword):
         # print(item.text)
         info['owner'] = spans[0].text
         # print(spans[0].text)                     #owner
+
+
         get_detail(info,keyword)
 
 
@@ -88,6 +92,8 @@ def get_detail(info,keyword):
     #在这里写数据库
     #info是一个字典，里面有如下字段'title': 专利的标题 'apply_time': 专利申请时间 'announce_time': 公示时间 'owner': 专利申请人
     sql = "INSERT INTO Application(Title,ApplyTime,AnnounceTime,Owner,Category) VALUES ('%s','%s','%s','%s','%s')" % (info["title"],info['apply_time'],info['announce_time'],info['owner'],keyword[0])
+    global lin_num
+    lin_num = lin_num + 1
     try:
         # 执行sql语句
         cursor.execute(sql)
@@ -97,10 +103,15 @@ def get_detail(info,keyword):
         # 发生错误时回滚
         db.rollback()
         message = "专利信息插入数据库异常！出错位置：#3 出错文件：fetch.py"
-        #mailbot.send_mail('1585084146@qq.com', message)
-        #mailbot.send_mail('1264160868@qq.com', message)
-        #mailbot.send_mail('1228974364@qq.com', message)
+        mailbot.send_mail('1585084146@qq.com', message)
+        mailbot.send_mail('1264160868@qq.com', message)
+        mailbot.send_mail('1228974364@qq.com', message)
         print("234567876543212345678765432")
+    sheet.write(lin_num, 0, info['title'])
+    sheet.write(lin_num, 1, info['apply_time'])
+    sheet.write(lin_num, 2, info['announce_time'])
+    sheet.write(lin_num, 3, info['owner'])
+
     print("%s  %s"%(info['title'], info['apply_time']))
 
 
@@ -115,6 +126,14 @@ def fetch(keyword):
 
 
 if __name__ == "__main__":
+    wb = xlwt.Workbook("data_out.xls")
+    sheet = wb.add_sheet("data-out")
+    sheet.write(0, 0, '标题')
+    sheet.write(0, 1, '申请时间')
+    sheet.write(0, 2, '发布时间')
+    sheet.write(0, 3, '作者')
+
+
     sql = "SELECT Category FROM Keyword"
     try:
         cursor.execute(sql)
@@ -127,7 +146,8 @@ if __name__ == "__main__":
         # 发生错误时回滚
         db.rollback()
         message = "关键词信息获取异常！出错位置：#4 出错文件：fetch.py"
-        mailbot.send_mail('1585084146@qq.com', message)
+        #mailbot.send_mail('1585084146@qq.com', message)
         #mailbot.send_mail('1264160868@qq.com', message)
         #mailbot.send_mail('1228974364@qq.com', message)
         print("234567876543212345678765432")
+    wb.save('data_out.xls')
